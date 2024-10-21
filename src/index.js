@@ -1,38 +1,38 @@
-import App from './components/App'
-//import Preact, { h, hydrate, render } from 'preact'
-import { documentReady, logAndReturn } from './components/Utils'
-import { h, options, render } from 'preact'
-/* eslint-disable */
-import './components/main.css'
-import 'bootstrap/dist/css/bootstrap.min.css'
-/* eslint-enable */
+import App from './components/App';
+import { h, options, render } from 'preact';
+import { documentReady, logAndReturn } from './components/Utils';
+import './components/main.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
+// Check if module hot-reloading is enabled
 if (module.hot) {
-	import('preact/debug')
-	const { registerObserver } = require('react-perf-devtool')
-	//const { whyDidYouRender } = require('@welldone-software/why-did-you-render')
+	import('preact/debug'); // Enable Preact debug in development
 
-	registerObserver()
-	//whyDidYouRender(Preact)
-	// @todo: Add preact-perf-profiler
+	const { registerObserver } = require('react-perf-devtool');
 
-	module.hot.accept('./components/App', () =>
+	// Register performance observer for development
+	registerObserver();
+
+	module.hot.accept('./components/App', () => {
+		// Re-initialize the app with hot reload
 		requestAnimationFrame(() => {
-			init(render, App, document.body.children[2])
-		})
-	)
+			init(render, App, document.body.children[2]);
+		});
+	});
 
-	const Perfume = require('perfume.js').default
+	// Perfume.js for performance monitoring
+	const Perfume = require('perfume.js').default;
 	new Perfume({
 		logging: true,
-		logPrefix: '⚡️',
-		resourceTiming: false,
-	})
+		logPrefix: '⚡️', // Custom log prefix for performance logs
+		resourceTiming: false, // Disable resource timing (can be enabled if needed)
+	});
 
-	new PerformanceObserver((list, observer) => {
+	// Performance observer for capturing specific performance metrics
+	new PerformanceObserver((list) => {
 		for (const entry of list.getEntries()) {
-			const time = Math.round(entry.startTime + entry.duration)
-			console.info('⚡', entry.name !== '' ? entry.name : entry.entryType, time, entry)
+			const time = Math.round(entry.startTime + entry.duration);
+			console.info('⚡', entry.name !== '' ? entry.name : entry.entryType, time, entry);
 		}
 	}).observe({
 		entryTypes: [
@@ -45,13 +45,20 @@ if (module.hot) {
 			'measure',
 			'navigation',
 			'paint',
-		], // PerformanceObserver.supportedEntryTypes
-	}) // resource, paint,
+		], // Entry types we want to observe for performance
+	});
 }
 
-options.debounceRendering = requestIdleCallback
+// Use `requestIdleCallback` to schedule low-priority rendering tasks
+options.debounceRendering = requestIdleCallback;
 
-const init = (fn, app, container) => fn(h(app), container)
-const ready = () => init(module.hot ? render : render, App, document.body.children[0]) // @todo: https://css-tricks.com/render-caching-for-react/ @todo: hydrate breaks reload.
+// Initialization function to render the Preact app
+const init = (fn, app, container) => fn(h(app), container);
 
-documentReady().then(ready).catch(logAndReturn)
+// Ensure the DOM is ready before initializing the app
+const ready = () => init(render, App, document.body.children[0]);
+
+// Handle document ready and initialization
+documentReady()
+	.then(ready)
+	.catch(logAndReturn);
